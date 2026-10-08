@@ -1,0 +1,87 @@
+[build-system]
+requires = ["setuptools>=68.0.0", "wheel>=0.40.0", "cmake>=3.25.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "raft-core-engine"
+version = "0.1.0"
+description = "High-performance production-grade Raft consensus core engine"
+readme = "README.md"
+authors = [
+    { name = "Core Infrastructure Team", email = "engineering@example.com" }
+]
+license = { text = "MIT" }
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: System :: Distributed Computing",
+]
+requires-python = ">=3.8"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-benchmark>=4.0.0",
+    "black>=23.0.0",
+    "flake8>=6.0.0",
+]
+
+[tool.setuptools]
+packages = ["raft_core_engine"]
+
+[tool.setuptools.build-meta]
+# Custom flags passed to underlying build systems if applicable
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]
+
+[tool.custom.targets]
+description = "Production lifecycle targets for raft-core-engine"
+
+# Target: all (Builds the core engine)
+all = [
+    "python -m pip install --upgrade pip",
+    "python -m pip install -e .[dev]",
+    "cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS='-O3 -Wall -Wextra'",
+    "cmake --build build --parallel"
+]
+
+# Target: build (Compiles C/C++ extensions and prepares package)
+build = [
+    "mkdir -p build",
+    "cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS='-O3 -Wall -Wextra'",
+    "cmake --build build --parallel",
+    "python -m build"
+]
+
+# Target: test (Runs the test suite safely)
+test = [
+    "pytest tests/ || (if [ -d \"tests\" ]; then exit 1; else echo \"Optional 'tests' directory missing. Skipping tests.\"; exit 0; fi)"
+]
+
+# Target: benchmark (Runs performance benchmarks safely)
+benchmark = [
+    "pytest --benchmark-only || (if [ -d \"benchmarks\" ] || [ -d \"tests\" ]; then exit 1; else echo \"Optional benchmark infrastructure missing. Skipping.\"; exit 0; fi)"
+]
+
+# Target: clean (Purges build artifacts safely)
+clean = [
+    "rm -rf build/ dist/ *.egg-info .pytest_cache/ __pycache__/ raft_core_engine.egg-info",
+    "find . -type f -name '*.pyc' -delete",
+    "find . -type d -name '__pycache__' -exec rm -r {} + 2>/dev/null || true"
+]
